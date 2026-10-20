@@ -16,3 +16,4 @@ __pycache__/
 venv/
 github_secrets.txt
 users/users.json
+cloudflared.exe

@@ -149,6 +149,9 @@ def _call_claude(batch: list[dict], today_date: str, attempt: int = 0) -> Option
         return None
     except Exception as e:
         log.warning("Claude API error (attempt %d): %s", attempt + 1, e)
+        err_str = str(e)
+        if any(term in err_str for term in ("invalid_request_error", "workspace", "400", "401", "403")):
+            return "NON_RETRYABLE"
         return None
 
 
@@ -192,11 +195,15 @@ def extract_deadlines(emails: list[dict], today_date: str) -> list[Optional[str]
         response_items = None
         for attempt in range(AI_MAX_RETRIES):
             response_items = _call_claude(batch_input, today_date, attempt)
+            if response_items == "NON_RETRYABLE":
+                response_items = None
+                break
             if response_items is not None:
                 break
-            wait = RETRY_BACKOFF_SECONDS * (2 ** attempt)
-            log.info("Retrying Claude in %ds (attempt %d/%d)…", wait, attempt + 1, AI_MAX_RETRIES)
-            time.sleep(wait)
+            if attempt < AI_MAX_RETRIES - 1:
+                wait = RETRY_BACKOFF_SECONDS * (2 ** attempt)
+                log.info("Retrying Claude in %ds (attempt %d/%d)…", wait, attempt + 1, AI_MAX_RETRIES)
+                time.sleep(wait)
 
         if response_items is None:
             log.warning(
