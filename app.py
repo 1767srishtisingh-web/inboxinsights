@@ -320,6 +320,7 @@ def dashboard():
 # ─── Gmail OAuth ──────────────────────────────────────────────────────────────
 
 @app.route("/connect-gmail")
+@app.route("/connect_gmail")
 @login_required
 def connect_gmail():
     """Begin the Gmail OAuth 2.0 PKCE flow for the current user."""
@@ -412,15 +413,16 @@ def oauth_callback():
     try:
         from modules.crypto import encrypt_token  # noqa: WPS433 — lazy import
         encrypted_token = encrypt_token(token_data)
-    except ImportError:
-        # Fallback: store as JSON string if no crypto module available
+    except Exception as exc:
         import json
-        encrypted_token = json.dumps(token_data)
+        log.warning("Token encryption fallback: %s", exc)
+        encrypted_token = json.dumps(token_data).encode("utf-8")
 
     add_gmail_account(
         user_id=user_id,
         email=gmail_address,
         label=label,
+        token_encrypted=encrypted_token,
         token=encrypted_token,
     )
 
@@ -525,6 +527,7 @@ def settings_delivery():
 # ─── Reports ──────────────────────────────────────────────────────────────────
 
 @app.route("/send-now", methods=["POST"])
+@app.route("/send_now", methods=["POST"])
 @login_required
 def send_now():
     """Trigger an immediate report generation in a background daemon thread."""
@@ -584,6 +587,7 @@ def serve_report(token):
 # ─── Account Management ───────────────────────────────────────────────────────
 
 @app.route("/delete-account", methods=["POST"])
+@app.route("/delete_account", methods=["POST"])
 @login_required
 def delete_account():
     """

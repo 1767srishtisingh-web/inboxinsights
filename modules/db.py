@@ -8,7 +8,7 @@ All queries are parameterized.
 import sqlite3
 import threading
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Union
 
 from config.settings import DB_PATH, LOGIN_MAX_ATTEMPTS, LOGIN_LOCKOUT_MINUTES
 from modules.logger import get_logger
@@ -92,10 +92,16 @@ def init_db() -> None:
             state TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
             code_verifier TEXT NOT NULL,
+            label TEXT DEFAULT 'Gmail',
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
     """)
     conn.commit()
+    try:
+        conn.execute("ALTER TABLE oauth_states ADD COLUMN label TEXT DEFAULT 'Gmail'")
+        conn.commit()
+    except Exception:
+        pass
     log.info("Database initialised at %s", DB_PATH)
 
 
@@ -258,16 +264,21 @@ def is_locked_out(whatsapp: str) -> LockoutStatus:
 
 def add_gmail_account(
     user_id: int,
-    label: str,
-    email: str,
-    token_encrypted: bytes,
+    label: str = "Gmail",
+    email: str = "",
+    token_encrypted: Optional[Union[bytes, str]] = None,
+    token: Optional[Union[bytes, str]] = None,
+    **kwargs,
 ) -> int:
     """Insert a gmail account and return its id."""
+    raw_token = token_encrypted if token_encrypted is not None else token
+    if isinstance(raw_token, str):
+        raw_token = raw_token.encode("utf-8")
     conn = get_connection()
     cur = conn.execute(
         """INSERT INTO gmail_accounts (user_id, label, email, token_encrypted)
            VALUES (?, ?, ?, ?)""",
-        (user_id, label, email, token_encrypted),
+        (user_id, label, email, raw_token),
     )
     conn.commit()
     return cur.lastrowid
@@ -405,14 +416,27 @@ def get_users_for_delivery() -> list[dict]:
 # OAuth state (PKCE)
 # ---------------------------------------------------------------------------
 
-def save_oauth_state(state: str, user_id: int, code_verifier: str) -> None:
+def save_oauth_state(
+    state: str,
+    user_id: int,
+    code_verifier: str,
+    label: str = "Gmail",
+    **kwargs,
+) -> None:
     """Persist an OAuth PKCE state entry."""
     conn = get_connection()
-    conn.execute(
-        """INSERT INTO oauth_states (state, user_id, code_verifier)
-           VALUES (?, ?, ?)""",
-        (state, user_id, code_verifier),
-    )
+    try:
+        conn.execute(
+            """INSERT OR REPLACE INTO oauth_states (state, user_id, code_verifier, label)
+               VALUES (?, ?, ?, ?)""",
+            (state, user_id, code_verifier, label),
+        )
+    except Exception:
+        conn.execute(
+            """INSERT OR REPLACE INTO oauth_states (state, user_id, code_verifier)
+               VALUES (?, ?, ?)""",
+            (state, user_id, code_verifier),
+        )
     conn.commit()
 
 

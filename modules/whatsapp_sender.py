@@ -122,8 +122,8 @@ def send_report(user: dict, report: dict, base_url: str) -> bool:
     dl_section = "\n".join(dl_lines[:10]) if dl_lines else "  (none)"
 
     # Build body
-    use_https = base_url.startswith("https://")
-    pdf_url   = f"{base_url}/r/{pdf_token}" if use_https and pdf_token else None
+    use_https   = base_url.startswith("https://")
+    report_link = f"{base_url}/r/{pdf_token}" if pdf_token else None
 
     body_parts = [
         f"📊 *Inbox Insights — {display_date}*",
@@ -133,10 +133,10 @@ def send_report(user: dict, report: dict, base_url: str) -> bool:
         dl_section,
     ]
 
-    if pdf_url:
+    if report_link:
         body_parts += [
             "",
-            f"📎 Report: {pdf_url}",
+            f"📎 Report: {report_link}",
             "⚠️ Link expires in 48h",
         ]
     else:
@@ -151,7 +151,9 @@ def send_report(user: dict, report: dict, base_url: str) -> bool:
     if len(body) > 1600:
         body = body[:1597] + "…"
 
-    media_url = pdf_url if use_https else None
+    # Twilio media_url requires a publicly accessible HTTPS link
+    is_localhost = any(h in base_url.lower() for h in ("localhost", "127.0.0.1", "0.0.0.0"))
+    media_url = report_link if (use_https and not is_localhost) else None
     return _send_with_retry(whatsapp_to, body, media_url=media_url)
 
 

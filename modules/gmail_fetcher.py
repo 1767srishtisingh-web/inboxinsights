@@ -94,7 +94,7 @@ def get_auth_url(user_id: int, label: str) -> tuple[str, str, str]:
     auth_url = f"{_GOOGLE_AUTH_URL}?{urlencode(params)}"
 
     # Persist state for callback verification
-    database.save_oauth_state(state, user_id, code_verifier)
+    database.save_oauth_state(state, user_id, code_verifier, label=label)
 
     return auth_url, state, code_verifier
 
