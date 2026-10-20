@@ -1,152 +1,191 @@
-# Setup Guide (Beginner-Friendly, Windows-focused)
+# ☕ Inbox Insights — Complete Windows Setup Guide
 
-## 1. Install software
+A beginner-friendly, step-by-step walkthrough to get Inbox Insights up and running on Windows from scratch.
 
-- **Python 3.10+**: https://www.python.org/downloads/ — during install,
-  check "Add python.exe to PATH".
-- **Git** (optional, only if cloning from GitHub): https://git-scm.com
+---
 
-## 2. Get the project onto your PC
+## 📋 Prerequisites
 
-Unzip `Inbox_Insights.zip` anywhere, e.g. `C:\Projects\Inbox_Insights`.
+Before starting, make sure you have:
+1. **Python 3.10+ (Recommended: Python 3.12)**: Download from [python.org](https://www.python.org/downloads/). Check "Add python.exe to PATH" during installation.
+2. **A Google Account**: To access Google Cloud Console and set up OAuth credentials.
+3. **A Free Twilio Account**: To send WhatsApp messages via the Twilio WhatsApp Sandbox ([twilio.com](https://www.twilio.com)).
+4. **An Anthropic Account** *(Optional but recommended)*: To obtain a Claude API key for AI deadline extraction ([console.anthropic.com](https://console.anthropic.com)). If omitted, the app will automatically use the built-in regex fallback.
 
-## 3. Create and activate a virtual environment
+---
 
-```powershell
-cd C:\Projects\Inbox_Insights
-python -m venv venv
-venv\Scripts\activate
-```
+## 🛠️ Step 1: Open Terminal & Set Up Python Virtual Environment
 
-You'll know it worked when your prompt shows `(venv)` at the start.
+1. Open PowerShell or Command Prompt.
+2. Navigate to the project directory:
+   ```powershell
+   cd C:\Users\Asus\OneDrive\Desktop\inboxinsights
+   ```
+3. Create and activate a Python virtual environment:
+   ```powershell
+   py -3.12 -m venv venv
+   .\venv\Scripts\Activate.ps1
+   ```
+   *(If PowerShell gives an execution policy error, run `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, then try activating again).*
 
-## 4. Install dependencies
+4. Install the required dependencies:
+   ```powershell
+   pip install -r requirements.txt
+   ```
 
-```powershell
-pip install -r requirements.txt
-```
+---
 
-## 5. Create your `.env` file
+## 🔑 Step 2: Configure Google Cloud OAuth (Web Application)
 
-```powershell
-copy .env.example .env
-```
+To allow users to connect their Gmail accounts, you need an OAuth 2.0 Web Application client:
 
-Open `.env` in a text editor and fill in:
-- `ANTHROPIC_API_KEY` — from https://console.anthropic.com
-- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` — from https://www.twilio.com
+1. Visit the **[Google Cloud Console](https://console.cloud.google.com/)**.
+2. Create a new project:
+   - Click the project dropdown at the top left → **New Project**.
+   - Name it `Inbox Insights` → click **Create**.
+3. Enable the **Gmail API**:
+   - Go to **APIs & Services** → **Library**.
+   - Search for `Gmail API` → click on it → click **Enable**.
+4. Configure the **OAuth Consent Screen**:
+   - Go to **APIs & Services** → **OAuth consent screen**.
+   - Choose **External** → click **Create**.
+   - **App name**: `Inbox Insights`
+   - **User support email**: Choose your email address.
+   - **Developer contact information**: Enter your email address.
+   - Click **Save and Continue**.
+5. Add the Read-Only Scope:
+   - Click **Add or Remove Scopes**.
+   - In the filter box, type `gmail.readonly` and check `https://www.googleapis.com/auth/gmail.readonly`.
+   - Click **Update** → **Save and Continue**.
+6. **IMPORTANT: Add Test Users**:
+   - While the app is in "Testing" mode, **only approved test users can log in**.
+   - Under **Test users**, click **+ Add Users**.
+   - Enter your Gmail address (and any friends' addresses you want to test with).
+   - Click **Save and Continue**.
+7. Create OAuth Client Credentials:
+   - Go to **APIs & Services** → **Credentials**.
+   - Click **+ Create Credentials** → **OAuth client ID**.
+   - **Application type**: Select **Web application** (*NOT Desktop App*).
+   - **Name**: `Inbox Insights Web Client`.
+   - **Authorized redirect URIs**: Click **+ Add URI** and enter:
+     ```
+     http://localhost:5000/oauth/callback
+     ```
+   - Click **Create**.
+   - A modal will appear with your **Client ID** and **Client Secret**. Copy both values for your `.env` file!
 
-## 6. Enable the Gmail API and download OAuth credentials
+---
 
-1. Go to https://console.cloud.google.com and create (or select) a project.
-2. APIs & Services → Library → search "Gmail API" → **Enable**.
-3. APIs & Services → Credentials → **Create Credentials** → OAuth client ID.
-4. Application type: **Desktop app**.
-5. Download the JSON file it generates.
-6. Rename it to `credentials.json` and place it in the project root
-   (or point `GMAIL_CREDENTIALS_FILE` in `.env` at wherever you saved it).
+## 💬 Step 3: Set Up Twilio WhatsApp Sandbox
 
-**Important:** treat this file like a password. Never commit it to
-GitHub or share it — anyone with it can request access to Gmail accounts
-under your Google Cloud project. `.gitignore` already excludes it and
-any `client_secret*.json` file, but double-check before pushing to a
-public repo.
+Twilio's free WhatsApp sandbox lets you send WhatsApp messages without business verification:
 
-## 7. Authenticate each Gmail account
+1. Sign up for a free account at **[twilio.com](https://www.twilio.com/)**.
+2. Go to the **Twilio Console**.
+3. Under **Account Info**, find and copy:
+   - **Account SID** (e.g. `ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`)
+   - **Auth Token**
+4. Navigate to **Messaging** → **Try it out** → **Send a WhatsApp message**.
+5. Look at the on-screen instructions:
+   - Twilio will provide a phone number (e.g., `+1 415 523 8886`) and a unique code (e.g., `join purple-fox`).
+6. From your phone's WhatsApp:
+   - Send that exact message (`join <your-code>`) to `+1 415 523 8886`.
+   - You will immediately receive a reply confirming: *"You are all set! The sandbox is joined."*
 
-You don't do this manually ahead of time — the first time `main.py` runs,
-it will open a browser window for **each** Gmail account listed in
-`users.json` that doesn't already have a saved token. Log into that
-Gmail account, approve access, and a token file is saved automatically
-under `tokens/`. You won't be asked again unless that token expires or
-is revoked.
+---
 
-## 8. Configure your users (unlimited, not just 5)
+## 🤖 Step 4: Get an Anthropic API Key (Claude)
 
-```powershell
-copy users\users.example.json users\users.json
-```
+1. Sign up or log in at **[console.anthropic.com](https://console.anthropic.com/)**.
+2. Go to **API Keys** → **Create Key**.
+3. Give it a name like `Inbox Insights` and copy the secret key (`sk-ant-...`).
 
-Edit `users/users.json`. Add one object per user:
+---
 
-```json
-{
-  "user_id": "user3",
-  "name": "Alex Kumar",
-  "enabled": true,
-  "whatsapp_to": "whatsapp:+91ZZZZZZZZZZ",
-  "gmail_accounts": [
-    { "alias": "personal", "label": "Personal Gmail" }
-  ]
-}
-```
+## ⚙️ Step 5: Configure `.env` File
 
-- `user_id` must be unique.
-- `whatsapp_to` must include the `whatsapp:` prefix and country code.
-- Each user can list as many `gmail_accounts` as they want.
-- Set `"enabled": false` to temporarily pause a user without deleting them.
+1. In the project directory, copy `.env.example` to `.env`:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Open `.env` in Notepad:
+   ```powershell
+   notepad .env
+   ```
+3. Fill in your credentials:
+   ```ini
+   SECRET_KEY=9f8e7d6c5b4a3210fedcba9876543210abcdef0123456789abcdef0123456789
+   BASE_URL=http://localhost:5000
 
-### WhatsApp Sandbox: each user must opt in once
+   GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GMAIL_CLIENT_SECRET=your-client-secret
+   GMAIL_REDIRECT_URI=http://localhost:5000/oauth/callback
 
-Twilio's free sandbox requires every recipient phone number to text
-`join <your-sandbox-word>` to the Twilio sandbox number **once**, from
-the phone that owns `whatsapp_to`. Find your sandbox word in the Twilio
-Console under Messaging → Try it out → Send a WhatsApp message.
+   ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   CLAUDE_MODEL=claude-haiku-4-5
 
-## 9. Schedule the daily run
+   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   TWILIO_AUTH_TOKEN=your-twilio-auth-token
+   TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+   TWILIO_SANDBOX_WORD=join your-sandbox-word
+   ```
+4. Save and close Notepad.
 
-Set your preferred time in `.env`:
+---
 
-```
-REPORT_TIME=17:00
-```
+## 🌐 Step 6: Making the App Public with ngrok (For WhatsApp PDF Attachments)
 
-Then start the scheduler and leave it running:
+Twilio requires a public HTTPS URL to download media files (the PDF report) and attach them directly to WhatsApp messages. If your app is only running on `http://localhost:5000`, the report link will still be sent as text, but the PDF won't be attached directly.
 
-```powershell
-python scheduler.py
-```
+To enable direct PDF attachments:
+1. Install ngrok using winget:
+   ```powershell
+   winget install ngrok
+   ```
+   *(Or download from [ngrok.com](https://ngrok.com) and extract `ngrok.exe`).*
+2. Start the tunnel in a separate command window:
+   ```powershell
+   ngrok http 5000
+   ```
+3. Copy the `Forwarding` HTTPS URL (e.g., `https://a1b2-c3d4.ngrok-free.app`).
+4. Update `.env`:
+   ```ini
+   BASE_URL=https://a1b2-c3d4.ngrok-free.app
+   GMAIL_REDIRECT_URI=https://a1b2-c3d4.ngrok-free.app/oauth/callback
+   ```
+5. In **Google Cloud Console** → **Credentials** → click your OAuth Web Client:
+   - Add `https://a1b2-c3d4.ngrok-free.app/oauth/callback` to **Authorized redirect URIs**.
+   - Click **Save**.
 
-It runs once immediately, then every day at `REPORT_TIME`.
+---
 
-## 10. Run manually and verify each stage
+## ▶️ Step 7: Launch the Application
 
-```powershell
-python main.py
-```
+1. In your active virtual environment terminal, start the server:
+   ```powershell
+   python app.py
+   ```
+2. Open your web browser and navigate to:
+   ```
+   http://localhost:5000
+   ```
+   *(or your ngrok URL).*
+3. Create your account with your WhatsApp number (e.g. `+919876543210`) and password.
+4. On the dashboard:
+   - Click **Add a Gmail account**.
+   - Sign in with your Google Account and grant read-only access.
+   - Adjust your delivery time or click **Send today's report now** to test immediately!
 
-Check the console output and `logs/application.log` for a per-user
-breakdown of:
-- Gmail authentication / fetch
-- AI summarization
-- PDF generation (saved under `output/`)
-- WhatsApp delivery
+---
 
-## 11. Troubleshooting
+## 🩺 Troubleshooting Guide
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `invalid_grant` | Gmail refresh token expired or was revoked | Delete the matching file in `tokens/` and re-run `main.py` to re-authenticate. |
-| `Bad Request` from Gmail API | Malformed query or missing scope | Check `EMAIL_QUERY_FILTER` in `.env`; confirm Gmail API is enabled for your project. |
-| WhatsApp message never arrives | User hasn't joined the sandbox | Have them text `join <sandbox-word>` to the Twilio number. |
-| WhatsApp upload/send fails | Twilio credentials wrong, or `PDF_PUBLIC_HOST_ENABLED=false` | Check `.env` values; check `logs/application.log` for the exact Twilio error code. |
-| `ModuleNotFoundError` | Dependencies not installed, or venv not activated | Run `venv\Scripts\activate` then `pip install -r requirements.txt` again. |
-| No emails in report | No new mail matching filter today | Check `EMAIL_QUERY_FILTER`; confirm the Gmail account actually has mail from today. |
-
-## 12. Updating user configuration later
-
-Just edit `users/users.json` — no code changes needed. Add, remove, or
-disable users, or add more Gmail accounts to an existing user, at any
-time. Restart `scheduler.py` (or wait for the next scheduled run) to
-pick up the changes.
-
-## 13. Running continuously on a Windows PC
-
-Simplest option: keep a terminal window open running `python
-scheduler.py`. For something more durable:
-
-- Use **Task Scheduler** to run `python main.py` once daily at your
-  chosen time instead of running `scheduler.py` continuously (skips the
-  need to keep a terminal open).
-- Or wrap `scheduler.py` as a Windows service using a tool like
-  `nssm` (Non-Sucking Service Manager), which is free.
+| Problem | Root Cause | Solution |
+| :--- | :--- | :--- |
+| **`redirect_uri_mismatch`** | The redirect URI sent does not match what is registered in Google Cloud Console. | Open Google Cloud Console → Credentials → Web Client. Ensure `http://localhost:5000/oauth/callback` (or your ngrok callback) is listed **identically** under Authorized redirect URIs. |
+| **`Access blocked: This app has not been verified`** | Google OAuth is in "Testing" mode and your email is not in the test list. | Go to Google Cloud Console → OAuth consent screen → **Test users** → Add your Gmail address. |
+| **WhatsApp message not received** | You haven't joined the Twilio Sandbox from your phone. | Open WhatsApp on your phone and send `join <your-sandbox-word>` to `+1 415 523 8886`. |
+| **PDF link says "Expired" (410 Gone)** | The 48-hour expiration window has elapsed. | Each report token is valid for 48 hours for privacy. Use the dashboard to view recent reports or regenerate a report. |
+| **No emails in PDF** | You didn't receive any emails today or they were categorized as spam/promotions. | Inbox Insights strictly fetches emails received **today** (00:00 to 23:59:59 in your timezone). Send yourself a test email to your connected Gmail, then click "Send today's report now". |
+| **Port 5000 in use** | Another service is using port 5000. | Change `PORT=5001` in `.env` and update your redirect URIs accordingly. |
+| **Database error** | Corrupted SQLite database file. | Delete `data/inbox_insights.db`. The application will automatically regenerate clean tables on the next startup. |

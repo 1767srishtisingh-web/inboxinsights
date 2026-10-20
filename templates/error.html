@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_code | default('Error') }} — Inbox Insights{% endblock %}
+{% block body_class %}page-error{% endblock %}
+
+{% block content %}
+<main class="error-main" id="main-content">
+    <div class="error-card">
+
+        <!-- Sad coffee cup illustration -->
+        <div class="error-illustration" aria-hidden="true">
+            <svg class="error-cup" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cup body -->
+                <path d="M50 100 Q44 180 100 190 Q156 180 150 100 Z"
+                      fill="#4A2A26"/>
+                <path d="M53 100 Q47 178 100 188 Q153 178 147 100 Z"
+                      fill="#7A5650"/>
+                <!-- Rim -->
+                <ellipse cx="100" cy="100" rx="48" ry="11" fill="#4A2A26"/>
+                <ellipse cx="100" cy="98" rx="48" ry="11" fill="#9A3440"/>
+                <!-- Coffee surface -->
+                <ellipse cx="100" cy="98" rx="43" ry="9" fill="#3A1A16"/>
+                <!-- Sad face on coffee surface -->
+                <!-- Eyes -->
+                <circle cx="88" cy="95" r="3" fill="#A3807E"/>
+                <circle cx="112" cy="95" r="3" fill="#A3807E"/>
+                <!-- Sad mouth -->
+                <path d="M88 104 Q100 99 112 104"
+                      fill="none" stroke="#A3807E" stroke-width="2"
+                      stroke-linecap="round"/>
+                <!-- Handle -->
+                <path d="M148 120 Q176 120 176 138 Q176 156 148 156"
+                      fill="none" stroke="#4A2A26" stroke-width="9"
+                      stroke-linecap="round"/>
+                <path d="M148 122 Q172 122 172 138 Q172 154 148 154"
+                      fill="none" stroke="#7A5650" stroke-width="5.5"
+                      stroke-linecap="round"/>
+                <!-- Saucer -->
+                <ellipse cx="100" cy="190" rx="68" ry="12" fill="#D4B8A8"/>
+                <ellipse cx="100" cy="187" rx="66" ry="11" fill="#F2D0CB"/>
+                <!-- Spilled coffee drip -->
+                <path d="M70 188 Q68 196 72 200 Q74 200 75 196 Q76 202 80 202 Q82 198 80 194"
+                      fill="#4A2A26" opacity="0.5"/>
+                <!-- No steam — cup is sad / cold -->
+            </svg>
+        </div>
+
+        <!-- Error code -->
+        <div class="error-code" aria-label="Error code {{ error_code | default('') | e }}">
+            {{ error_code | default('Oops') | e }}
+        </div>
+
+        <!-- Error heading -->
+        <h1 class="error-heading">
+            {% if error_code == 404 %}
+                Page not found
+            {% elif error_code == 500 %}
+                Something went wrong
+            {% elif error_code == 403 %}
+                Access denied
+            {% elif error_code == 429 %}
+                Too many requests
+            {% else %}
+                An error occurred
+            {% endif %}
+        </h1>
+
+        <!-- Error message -->
+        <p class="error-message">
+            {% if error_message %}
+                {{ error_message | e }}
+            {% elif error_code == 404 %}
+                The page you're looking for seems to have wandered off. Maybe it's
+                taking a coffee break?
+            {% elif error_code == 500 %}
+                Our servers spilled their latte. We're cleaning it up — please try
+                again in a moment.
+            {% elif error_code == 403 %}
+                You don't have permission to view this page.
+            {% elif error_code == 429 %}
+                Slow down! You've made too many requests. Take a sip and try again.
+            {% else %}
+                Something unexpected happened. Please try again or go back home.
+            {% endif %}
+        </p>
+
+        <!-- Actions -->
+        <div class="error-actions">
+            <a href="{{ url_for('index') }}" class="btn btn--pill btn--espresso"
+               aria-label="Go back to the Inbox Insights home page">
+                ☕ Go home
+            </a>
+            {% if current_user and current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn--pill btn--outline"
+                   aria-label="Go to your dashboard">
+                    Dashboard
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn--pill btn--outline"
+                   aria-label="Go to the login page">
+                    Sign in
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Helpful hint for 404 -->
+        {% if error_code == 404 %}
+        <p class="error-hint">
+            Looking for your digest?
+            {% if current_user and current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="link--raspberry">Check your dashboard.</a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="link--raspberry">Get started free.</a>
+            {% endif %}
+        </p>
+        {% endif %}
+
+    </div>
+</main>
+{% endblock %}

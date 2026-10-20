@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Steam wisps -->
+  <path class="steam-path steam__wisp steam__wisp--1" d="M80 55 C70 40 90 25 80 10" stroke="#FBF7F1" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path class="steam-path steam__wisp steam__wisp--2" d="M100 50 C90 35 110 20 100 5" stroke="#FBF7F1" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path class="steam-path steam__wisp steam__wisp--3" d="M120 55 C110 40 130 25 120 10" stroke="#FBF7F1" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+  <!-- Whipped cream swirl -->
+  <path d="M50 85 C55 60 85 55 100 65 C115 55 145 60 150 85 Z" fill="#FBF7F1"/>
+  <path d="M70 70 C85 50 115 50 130 70" stroke="#F3DFCF" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Raspberry on top -->
+  <circle cx="100" cy="55" r="9" fill="#9A3440"/>
+  <circle cx="97" cy="53" r="2.5" fill="#C4606D"/>
+
+  <!-- Coffee cup body -->
+  <path d="M40 85 H160 L145 185 C143 195 135 200 125 200 H75 C65 200 57 195 55 185 Z" fill="#4A2A26"/>
+  
+  <!-- Cup highlight -->
+  <path d="M52 95 L63 180" stroke="#7A5650" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Cup handle -->
+  <path d="M155 105 C180 105 185 155 150 160" stroke="#4A2A26" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <path d="M155 105 C176 105 181 155 150 160" stroke="#7A5650" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+  <!-- Saucer -->
+  <ellipse cx="100" cy="210" rx="75" ry="12" fill="#A3807E"/>
+  <ellipse cx="100" cy="208" rx="65" ry="8" fill="#FBF7F1"/>
+</svg>
+

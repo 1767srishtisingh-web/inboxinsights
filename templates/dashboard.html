@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Inbox Insights{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block content %}
+<main id="main-content">
+
+<!-- ================================================================
+     SECTION 1 — GREETING BAND (Mauve, torn paper bottom edge)
+================================================================ -->
+<section class="dash-hero" aria-labelledby="dash-greeting">
+    <div class="dash-hero__inner">
+        <h1 class="dash-hero__greeting" id="dash-greeting">
+            Good {{ time_of_day | e }},
+            <em>{{ current_user.name.split()[0] | e }}.</em>
+        </h1>
+        <p class="dash-hero__sub">Here's what's happening with your inbox digest.</p>
+
+        <!-- Stat chips -->
+        <div class="dash-stats" role="list" aria-label="Account statistics">
+            <div class="dash-stat" role="listitem">
+                <span class="dash-stat__num" aria-label="{{ gmail_accounts | length }} Gmail accounts">
+                    {{ gmail_accounts | length }}
+                </span>
+                <span class="dash-stat__label">Gmail accounts</span>
+            </div>
+            <div class="dash-stat" role="listitem">
+                <span class="dash-stat__num" aria-label="Next delivery at {{ current_user.delivery_time }}">
+                    {{ current_user.delivery_time | e }}
+                </span>
+                <span class="dash-stat__label">Next delivery</span>
+            </div>
+            <div class="dash-stat" role="listitem">
+                <span class="dash-stat__num" aria-label="{{ last_email_count }} emails in last report">
+                    {{ last_email_count }}
+                </span>
+                <span class="dash-stat__label">Emails in last report</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-tear" aria-hidden="true"></div>
+</section>
+
+<!-- ================================================================
+     SECTION 2 — GMAIL ACCOUNTS
+================================================================ -->
+<section class="dash-section" aria-labelledby="gmail-section-heading">
+    <div class="dash-section__inner">
+        <div class="dash-section__hd">
+            <h2 class="dash-section__heading" id="gmail-section-heading">Gmail Accounts</h2>
+            <a href="/connect-gmail" class="btn btn--pill btn--sm btn--espresso"
+               aria-label="Connect a new Gmail account">
+                + Connect Gmail
+            </a>
+        </div>
+
+        <div class="gmail-cards" role="list" aria-label="Connected Gmail accounts">
+
+            {% for account in gmail_accounts %}
+            <article class="gmail-card gmail-card--{{ loop.index0 | pastel_color }}"
+                     role="listitem"
+                     aria-labelledby="acct-label-{{ account.id }}">
+                <div class="gmail-card__top">
+                    <div class="gmail-card__label" id="acct-label-{{ account.id }}">
+                        {{ account.label | e }}
+                    </div>
+                    <div class="gmail-card__email" aria-label="Email address: {{ account.email }}">
+                        {{ account.email | e }}
+                    </div>
+                </div>
+
+                <div class="gmail-card__status gmail-card__status--{{ account.status | e }}"
+                     aria-label="Connection status: {% if account.status == 'ok' %}Connected{% else %}Reconnect needed{% endif %}">
+                    {% if account.status == 'ok' %}
+                        <span aria-hidden="true">✓</span> Connected
+                    {% else %}
+                        <span aria-hidden="true">⚠️</span> Reconnect needed
+                    {% endif %}
+                </div>
+
+                <div class="gmail-card__actions">
+                    {% if account.status == 'reconnect_needed' %}
+                        <form method="post" action="/gmail/reconnect/{{ account.id | e }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn--pill btn--sm btn--raspberry"
+                                    aria-label="Reconnect {{ account.label | e }}">
+                                Reconnect
+                            </button>
+                        </form>
+                    {% endif %}
+                    <form method="post" action="/gmail/remove/{{ account.id | e }}"
+                          onsubmit="return confirm('Remove {{ account.label | e }}? This cannot be undone.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--ghost btn--sm"
+                                aria-label="Remove {{ account.label | e }} from your account">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+
+            <!-- Add account card -->
+            <a href="/connect-gmail" class="gmail-card gmail-card--add"
+               aria-label="Add a new Gmail account">
+                <span class="gmail-card__add-icon" aria-hidden="true">+</span>
+                <span>Add a Gmail account</span>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 3 — TWO-COLUMN SETTINGS PANEL
+================================================================ -->
+<section class="dash-section" aria-labelledby="settings-heading">
+    <div class="dash-section__inner">
+        <h2 class="dash-section__heading" id="settings-heading">Settings</h2>
+
+        <div class="settings-grid">
+
+            <!-- LEFT: Delivery Settings -->
+            <div class="settings-panel" aria-labelledby="delivery-settings-heading">
+                <h3 class="settings-panel__heading" id="delivery-settings-heading">
+                    Delivery Settings
+                </h3>
+                <form method="post" action="/settings/delivery"
+                      aria-label="Update delivery settings">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label class="form-label" for="delivery_time">Delivery time</label>
+                        <input
+                            class="form-input"
+                            type="time"
+                            id="delivery_time"
+                            name="delivery_time"
+                            value="{{ current_user.delivery_time | e }}"
+                            aria-describedby="delivery_tz_hint"
+                        >
+                        <span class="form-hint" id="delivery_tz_hint">
+                            In your selected timezone.
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="settings_timezone">Timezone</label>
+                        <select class="form-select" id="settings_timezone" name="timezone"
+                                aria-label="Select your timezone">
+                            {% set tz_options = [
+                                ('Asia/Kolkata',        'Asia/Kolkata (IST, UTC+5:30)'),
+                                ('America/New_York',    'America/New_York (EST/EDT)'),
+                                ('America/Los_Angeles', 'America/Los_Angeles (PST/PDT)'),
+                                ('Europe/London',       'Europe/London (GMT/BST)'),
+                                ('Europe/Paris',        'Europe/Paris (CET/CEST)'),
+                                ('Australia/Sydney',    'Australia/Sydney (AEST/AEDT)'),
+                                ('Asia/Dubai',          'Asia/Dubai (GST, UTC+4)'),
+                                ('Asia/Singapore',      'Asia/Singapore (SGT, UTC+8)'),
+                                ('Asia/Tokyo',          'Asia/Tokyo (JST, UTC+9)'),
+                                ('UTC',                 'UTC'),
+                            ] %}
+                            {% for tz_value, tz_label in tz_options %}
+                                <option value="{{ tz_value | e }}"
+                                    {% if current_user.timezone == tz_value %}selected{% endif %}>
+                                    {{ tz_label | e }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="toggle-label" for="delivery_enabled">
+                            <input
+                                type="checkbox"
+                                class="toggle-input"
+                                id="delivery_enabled"
+                                name="delivery_enabled"
+                                {% if current_user.delivery_enabled %}checked{% endif %}
+                                aria-describedby="delivery_toggle_hint"
+                            >
+                            <span class="toggle-track" aria-hidden="true"></span>
+                            <span class="toggle-text">Auto-delivery enabled</span>
+                        </label>
+                        <span class="form-hint" id="delivery_toggle_hint">
+                            When enabled, your report is sent automatically each day.
+                        </span>
+                    </div>
+
+                    <button class="btn btn--pill btn--espresso" type="submit"
+                            aria-label="Save delivery settings">
+                        Save settings
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT: WhatsApp Setup -->
+            <div class="settings-panel" aria-labelledby="whatsapp-settings-heading">
+                <h3 class="settings-panel__heading" id="whatsapp-settings-heading">
+                    WhatsApp Setup
+                </h3>
+
+                <div class="sandbox-notice" role="note" aria-label="WhatsApp sandbox activation">
+                    <span class="sandbox-notice__icon" aria-hidden="true">📱</span>
+                    <div class="sandbox-notice__body">
+                        <strong>Activate WhatsApp to receive reports:</strong>
+                        <p>Send <code class="sandbox-code">join &lt;sandbox-word&gt;</code> to
+                            <strong>+1 (415) 523-8886</strong> on WhatsApp.</p>
+                        <p class="sandbox-notice__footnote">You only need to do this once.</p>
+                    </div>
+                </div>
+
+                <div class="whatsapp-number-display" aria-label="Your registered WhatsApp number">
+                    <span class="whatsapp-number-display__label">Your number</span>
+                    <span class="whatsapp-number-display__value">
+                        {{ current_user.whatsapp_number | e }}
+                    </span>
+                </div>
+
+                <form method="post" action="/send-now" aria-label="Send today's report now">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn--pill btn--espresso btn--full" type="submit"
+                            aria-label="Send today's email digest report now via WhatsApp">
+                        <span aria-hidden="true">📊</span> Send today's report now
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 4 — REPORTS TABLE
+================================================================ -->
+<section class="dash-section" aria-labelledby="reports-heading">
+    <div class="dash-section__inner">
+        <h2 class="dash-section__heading" id="reports-heading">Report History</h2>
+
+        <div class="reports-grid">
+
+            <!-- Reports Table -->
+            <div class="reports-table-wrap">
+                <div class="table-responsive" role="region"
+                     aria-label="Report history table" tabindex="0">
+                    <table class="reports-table" role="table"
+                           aria-labelledby="reports-heading">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Emails</th>
+                                <th scope="col">Deadlines</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>
+                                    <time datetime="{{ report.report_date }}">
+                                        {{ report.report_date }}
+                                    </time>
+                                </td>
+                                <td>{{ report.email_count }}</td>
+                                <td>
+                                    {% if report.deadline_count > 0 %}
+                                        <span class="deadline-count" aria-label="{{ report.deadline_count }} deadlines detected">
+                                            {{ report.deadline_count }}
+                                        </span>
+                                    {% else %}
+                                        <span class="deadline-count--none">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-badge--{{ report.whatsapp_status | e }}"
+                                          aria-label="WhatsApp status: {{ report.whatsapp_status | e }}">
+                                        {{ report.whatsapp_status | e }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if report.pdf_token %}
+                                        <a href="/r/{{ report.pdf_token | e }}"
+                                           class="link--raspberry"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           aria-label="Open PDF report for {{ report.report_date }}">
+                                            Open PDF
+                                        </a>
+                                    {% else %}
+                                        <span aria-label="No PDF available">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not reports %}
+                            <tr>
+                                <td colspan="5" class="table-empty" role="cell">
+                                    No reports yet. Your first report will arrive tomorrow morning!
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Latte illustration -->
+            <div class="reports-illustration" aria-hidden="true">
+                <svg class="latte-cup latte-cup--dashboard"
+                     viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Steam -->
+                    <g class="steam">
+                        <path class="steam__wisp steam__wisp--1"
+                              d="M80 52 Q75 40 80 28 Q85 16 80 4"
+                              fill="none" stroke="#A3807E" stroke-width="2.5"
+                              stroke-linecap="round" opacity="0.5"/>
+                        <path class="steam__wisp steam__wisp--2"
+                              d="M100 56 Q95 43 100 31 Q105 19 100 6"
+                              fill="none" stroke="#A3807E" stroke-width="2.5"
+                              stroke-linecap="round" opacity="0.5"/>
+                        <path class="steam__wisp steam__wisp--3"
+                              d="M120 52 Q115 40 120 28 Q125 16 120 4"
+                              fill="none" stroke="#A3807E" stroke-width="2.5"
+                              stroke-linecap="round" opacity="0.5"/>
+                    </g>
+                    <!-- Saucer -->
+                    <ellipse cx="100" cy="210" rx="72" ry="13" fill="#D4B8A8"/>
+                    <ellipse cx="100" cy="207" rx="70" ry="12" fill="#F2D0CB"/>
+                    <ellipse cx="100" cy="204" rx="66" ry="10" fill="#F3DFCF"/>
+                    <!-- Cup body -->
+                    <path d="M48 118 Q42 200 100 210 Q158 200 152 118 Z"
+                          fill="#4A2A26"/>
+                    <path d="M51 118 Q45 198 100 208 Q155 198 149 118 Z"
+                          fill="#7A5650"/>
+                    <!-- Rim -->
+                    <ellipse cx="100" cy="118" rx="49" ry="11" fill="#4A2A26"/>
+                    <ellipse cx="100" cy="116" rx="49" ry="11" fill="#9A3440"/>
+                    <!-- Coffee surface -->
+                    <ellipse cx="100" cy="116" rx="44" ry="9" fill="#3A1A16"/>
+                    <!-- Latte art rosette -->
+                    <path d="M100 108 Q93 112 91 116 Q100 120 109 116 Q107 112 100 108 Z"
+                          fill="#7A5650" opacity="0.55"/>
+                    <line x1="100" y1="108" x2="100" y2="121"
+                          stroke="#A3807E" stroke-width="1" opacity="0.4"/>
+                    <!-- Handle -->
+                    <path d="M150 138 Q178 138 178 157 Q178 176 150 176"
+                          fill="none" stroke="#4A2A26" stroke-width="9"
+                          stroke-linecap="round"/>
+                    <path d="M150 140 Q174 140 174 157 Q174 174 150 174"
+                          fill="none" stroke="#7A5650" stroke-width="5.5"
+                          stroke-linecap="round"/>
+                    <!-- Decorative lines on cup -->
+                    <line x1="68" y1="145" x2="68" y2="166"
+                          stroke="#9A3440" stroke-width="1.5" opacity="0.35"
+                          stroke-linecap="round"/>
+                    <line x1="76" y1="142" x2="76" y2="172"
+                          stroke="#9A3440" stroke-width="1.5" opacity="0.35"
+                          stroke-linecap="round"/>
+                </svg>
+                <p class="reports-illustration__caption">
+                    Your daily digest,<br><em>beautifully served.</em>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 5 — DANGER ZONE
+================================================================ -->
+<section class="dash-section dash-section--danger" aria-labelledby="danger-heading">
+    <div class="dash-section__inner">
+        <details class="danger-zone">
+            <summary class="danger-zone__summary" aria-label="Expand danger zone: Delete my account">
+                <span class="danger-zone__summary-text">Danger Zone</span>
+                <span class="danger-zone__chevron" aria-hidden="true">▸</span>
+            </summary>
+
+            <div class="danger-zone__body">
+                <h3 class="danger-zone__heading" id="danger-heading">Delete my account</h3>
+                <p class="danger-zone__warning">
+                    This permanently deletes your account, all Gmail connections, all
+                    PDF reports, and your scheduled digest. <strong>This cannot be undone.</strong>
+                </p>
+
+                <form method="post" action="/delete-account"
+                      onsubmit="return confirm('Are you absolutely sure? This permanently deletes your account and all data. This cannot be undone.')"
+                      aria-label="Delete your Inbox Insights account permanently">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label class="form-label form-label--danger" for="delete_password">
+                            Confirm your password to delete
+                        </label>
+                        <input
+                            class="form-input form-input--danger"
+                            type="password"
+                            id="delete_password"
+                            name="password"
+                            required
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            aria-required="true"
+                        >
+                    </div>
+
+                    <button class="btn btn--pill btn--danger" type="submit"
+                            aria-label="Permanently delete my Inbox Insights account">
+                        Delete my account
+                    </button>
+                </form>
+            </div>
+        </details>
+    </div>
+</section>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animate details chevron
+    document.querySelectorAll('.danger-zone').forEach(function(details) {
+        details.addEventListener('toggle', function() {
+            var chevron = details.querySelector('.danger-zone__chevron');
+            if (chevron) {
+                chevron.textContent = details.open ? '▾' : '▸';
+            }
+        });
+    });
+</script>
+{% endblock %}

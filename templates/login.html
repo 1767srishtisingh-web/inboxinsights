@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in — Inbox Insights{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+
+{% block content %}
+<main class="auth-main" id="main-content">
+    <div class="auth-card">
+
+        <!-- Header -->
+        <div class="auth-card__header">
+            <a href="{{ url_for('index') }}" class="auth-logo" aria-label="Back to Inbox Insights home">
+                <span class="auth-logo__serif">Inbox</span> <em>Insights</em>
+            </a>
+            <h1 class="auth-card__heading">Welcome back</h1>
+            <p class="auth-card__sub">Sign in to your Inbox Insights account.</p>
+        </div>
+
+        <!-- Login form -->
+        <form class="auth-form" method="post" action="{{ url_for('login') }}"
+              novalidate aria-labelledby="login-form-label">
+            <h2 id="login-form-label" class="sr-only">Sign in form</h2>
+
+            <!-- CSRF token -->
+            {% if form is defined %}
+                {{ form.hidden_tag() }}
+            {% else %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+
+            <!-- WhatsApp Number -->
+            <div class="form-group">
+                <label class="form-label" for="whatsapp_number">WhatsApp Number</label>
+                <input
+                    class="form-input {% if form is defined and form.whatsapp_number.errors %}form-input--error{% endif %}"
+                    type="tel"
+                    id="whatsapp_number"
+                    name="whatsapp_number"
+                    value="{{ form.whatsapp_number.data | e if form is defined and form.whatsapp_number.data else '' }}"
+                    required
+                    autocomplete="tel"
+                    placeholder="+91 98765 43210"
+                    pattern="\+[0-9]{8,15}"
+                    aria-required="true"
+                    aria-describedby="wa_login_error"
+                >
+                {% if form is defined and form.whatsapp_number.errors %}
+                    <span class="form-error" id="wa_login_error" role="alert">
+                        {{ form.whatsapp_number.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input
+                    class="form-input {% if form is defined and form.password.errors %}form-input--error{% endif %}"
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                    placeholder="Your password"
+                    aria-required="true"
+                    aria-describedby="pwd_login_error"
+                >
+                {% if form is defined and form.password.errors %}
+                    <span class="form-error" id="pwd_login_error" role="alert">
+                        {{ form.password.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <button class="btn btn--pill btn--espresso btn--full" type="submit"
+                    aria-label="Sign in to your Inbox Insights account">
+                Sign in
+            </button>
+
+            <p class="auth-form__switch">
+                Don't have an account?
+                <a href="{{ url_for('register') }}" class="link--raspberry">Create one free</a>
+            </p>
+        </form>
+
+    </div>
+</main>
+{% endblock %}

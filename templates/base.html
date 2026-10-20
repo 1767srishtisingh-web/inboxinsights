@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inbox Insights{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<!-- Flash messages -->
+<div class="flash-container" role="alert" aria-live="polite">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash--{{ category | e }}">
+                    <span>{{ message | e }}</span>
+                    <button class="flash__close" aria-label="Dismiss notification" onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+{% block nav %}
+<!-- Default nav for inner pages -->
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+        <a href="{{ url_for('index') }}" class="nav-logo" aria-label="Inbox Insights home">
+            <span class="nav-logo__serif">Inbox</span> <em>Insights</em>
+        </a>
+        <div class="nav-links">
+            {% if current_user and current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn--outline btn--sm">Sign out</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">Log in</a>
+                <a href="{{ url_for('register') }}" class="btn btn--pill">Get started</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+<footer class="site-footer" role="contentinfo">
+    <div class="footer-tear" aria-hidden="true"></div>
+    <div class="footer-inner">
+        <p class="footer-logo"><span>Inbox</span> <em>Insights</em></p>
+        <p class="footer-tagline">Your daily email digest, beautifully delivered.</p>
+        <p class="footer-copy">© 2026 Inbox Insights. Built with ☕ and Python.</p>
+    </div>
+</footer>
+{% endblock %}
+
+<script>
+    // Auto-dismiss flash messages after 5 seconds
+    document.querySelectorAll('.flash').forEach(function(el) {
+        setTimeout(function() {
+            if (el && el.parentElement) el.remove();
+        }, 5000);
+    });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

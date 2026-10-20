@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox Insights — Your daily email digest{% endblock %}
+{% block body_class %}page-landing{% endblock %}
+
+{% block nav %}
+<!-- Landing page transparent nav -->
+<nav class="site-nav site-nav--landing" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+        <a href="{{ url_for('index') }}" class="nav-logo" aria-label="Inbox Insights home">
+            <span class="nav-logo__serif">Inbox</span> <em>Insights</em>
+        </a>
+        <div class="nav-links">
+            {% if current_user and current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="nav-link nav-link--light">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="btn btn--outline-cream btn--sm">Sign out</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-link nav-link--light">Log in</a>
+                <a href="{{ url_for('register') }}" class="btn btn--cream btn--pill">Get started</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================================================================
+     SECTION 1 — HERO (Mauve band)
+================================================================ -->
+<section class="hero" aria-labelledby="hero-heading">
+    <div class="hero__inner">
+        <div class="hero__copy">
+            <h1 class="hero__heading" id="hero-heading">
+                Your inbox,<br>
+                <em class="hero__heading-em">beautifully</em> digested.
+            </h1>
+            <p class="hero__sub">
+                Connect your Gmail, choose your time. Get a clean PDF report
+                on WhatsApp every day.
+            </p>
+            <div class="hero__cta-group">
+                <a href="{{ url_for('register') }}" class="btn btn--pill btn--espresso">
+                    Get started free
+                </a>
+                <a href="#how-it-works" class="btn btn--pill btn--outline-cream">
+                    See how it works
+                </a>
+            </div>
+        </div>
+
+        <!-- Coffee cup SVG illustration -->
+        <div class="hero__illustration" aria-hidden="true">
+            <svg class="coffee-cup" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"
+                 role="img" aria-label="Coffee cup illustration">
+                <!-- Steam lines -->
+                <g class="steam" aria-hidden="true">
+                    <path class="steam__wisp steam__wisp--1"
+                          d="M80 55 Q75 42 80 30 Q85 18 80 5"
+                          fill="none" stroke="#FBF7F1" stroke-width="3"
+                          stroke-linecap="round"/>
+                    <path class="steam__wisp steam__wisp--2"
+                          d="M100 58 Q95 44 100 32 Q105 20 100 7"
+                          fill="none" stroke="#FBF7F1" stroke-width="3"
+                          stroke-linecap="round"/>
+                    <path class="steam__wisp steam__wisp--3"
+                          d="M120 55 Q115 42 120 30 Q125 18 120 5"
+                          fill="none" stroke="#FBF7F1" stroke-width="3"
+                          stroke-linecap="round"/>
+                </g>
+                <!-- Saucer -->
+                <ellipse cx="100" cy="210" rx="70" ry="12" fill="#7A5650"/>
+                <ellipse cx="100" cy="207" rx="70" ry="12" fill="#F2D0CB"/>
+                <ellipse cx="100" cy="204" rx="66" ry="10" fill="#F3DFCF"/>
+                <!-- Cup body -->
+                <path d="M55 130 Q50 190 100 200 Q150 190 145 130 Z"
+                      fill="#4A2A26"/>
+                <path d="M57 130 Q52 188 100 198 Q148 188 143 130 Z"
+                      fill="#7A5650"/>
+                <!-- Cup rim -->
+                <ellipse cx="100" cy="130" rx="45" ry="10" fill="#4A2A26"/>
+                <ellipse cx="100" cy="128" rx="45" ry="10" fill="#9A3440"/>
+                <!-- Coffee surface -->
+                <ellipse cx="100" cy="128" rx="41" ry="8" fill="#4A2A26"/>
+                <!-- Latte art heart -->
+                <path d="M92 124 Q92 120 96 120 Q100 120 100 124
+                         Q100 120 104 120 Q108 120 108 124
+                         Q108 128 100 133 Q92 128 92 124 Z"
+                      fill="#7A5650" opacity="0.7"/>
+                <!-- Handle -->
+                <path d="M145 150 Q170 150 170 168 Q170 186 145 186"
+                      fill="none" stroke="#4A2A26" stroke-width="8"
+                      stroke-linecap="round"/>
+                <path d="M145 152 Q166 152 166 168 Q166 184 145 184"
+                      fill="none" stroke="#7A5650" stroke-width="5"
+                      stroke-linecap="round"/>
+            </svg>
+        </div>
+    </div>
+    <!-- Torn paper edge -->
+    <div class="hero-tear" aria-hidden="true"></div>
+</section>
+
+<!-- ================================================================
+     SECTION 2 — HOW IT WORKS (Cream background)
+================================================================ -->
+<section class="features" id="how-it-works" aria-labelledby="features-heading">
+    <div class="features__inner">
+        <p class="section-eyebrow">HOW IT WORKS</p>
+        <h2 class="section-heading" id="features-heading">Three steps to a cleaner inbox</h2>
+
+        <div class="features__grid">
+            <article class="feature-item" aria-labelledby="feat1-heading">
+                <div class="feature-item__icon" aria-hidden="true">
+                    <span>📧</span>
+                </div>
+                <h3 class="feature-item__heading" id="feat1-heading">Connect Gmail</h3>
+                <p class="feature-item__body">
+                    Link one or more Gmail accounts with one click. We use
+                    OAuth — no passwords stored.
+                </p>
+            </article>
+
+            <article class="feature-item" aria-labelledby="feat2-heading">
+                <div class="feature-item__icon" aria-hidden="true">
+                    <span>📄</span>
+                </div>
+                <h3 class="feature-item__heading" id="feat2-heading">Daily PDF Report</h3>
+                <p class="feature-item__body">
+                    A clean table of today's emails, with deadlines highlighted
+                    and senders summarised.
+                </p>
+            </article>
+
+            <article class="feature-item" aria-labelledby="feat3-heading">
+                <div class="feature-item__icon" aria-hidden="true">
+                    <span>💬</span>
+                </div>
+                <h3 class="feature-item__heading" id="feat3-heading">WhatsApp Delivery</h3>
+                <p class="feature-item__body">
+                    Delivered to your phone at the time you choose, straight
+                    to your WhatsApp inbox.
+                </p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 3 — PASTEL CARDS (Cream background)
+================================================================ -->
+<section class="cards-section" aria-labelledby="cards-heading">
+    <div class="cards-section__inner">
+        <h2 class="sr-only" id="cards-heading">What Inbox Insights does for you</h2>
+        <div class="pastel-cards">
+
+            <article class="pastel-card pastel-card--pink" aria-labelledby="card1-title">
+                <div class="pastel-card__illustration" aria-hidden="true">
+                    <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="10" y="20" width="60" height="45" rx="6"
+                              fill="#4A2A26" opacity="0.15"/>
+                        <rect x="12" y="22" width="56" height="41" rx="5"
+                              fill="#FBF7F1"/>
+                        <path d="M12 30 L40 46 L68 30" fill="none"
+                              stroke="#A3807E" stroke-width="2.5"
+                              stroke-linecap="round"/>
+                        <circle cx="58" cy="22" r="10" fill="#9A3440"/>
+                        <path d="M54 22 L57 25 L63 19" fill="none"
+                              stroke="white" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="pastel-card__title" id="card1-title">Connect</h3>
+                <p class="pastel-card__caption">LINK YOUR <em>gmail</em></p>
+            </article>
+
+            <article class="pastel-card pastel-card--peach" aria-labelledby="card2-title">
+                <div class="pastel-card__illustration" aria-hidden="true">
+                    <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="15" y="10" width="50" height="62" rx="5"
+                              fill="#FBF7F1" stroke="#A3807E" stroke-width="2"/>
+                        <line x1="24" y1="28" x2="56" y2="28"
+                              stroke="#CFB6C5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="36" x2="56" y2="36"
+                              stroke="#CFB6C5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="44" x2="44" y2="44"
+                              stroke="#9A3440" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="22" cy="55" r="6" fill="#9A3440" opacity="0.2"/>
+                        <path d="M19 55 L21.5 57.5 L26 52" fill="none"
+                              stroke="#9A3440" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 class="pastel-card__title" id="card2-title">Summarise</h3>
+                <p class="pastel-card__caption">SMART <em>deadlines</em></p>
+            </article>
+
+            <article class="pastel-card pastel-card--lavender" aria-labelledby="card3-title">
+                <div class="pastel-card__illustration" aria-hidden="true">
+                    <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="12" y="18" width="36" height="46" rx="4"
+                              fill="#FBF7F1" stroke="#A3807E" stroke-width="2"/>
+                        <line x1="20" y1="30" x2="40" y2="30"
+                              stroke="#CFB6C5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="20" y1="37" x2="40" y2="37"
+                              stroke="#CFB6C5" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="20" y1="44" x2="34" y2="44"
+                              stroke="#CFB6C5" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="55" cy="52" r="16" fill="#25D366"/>
+                        <path d="M55 44 C49 44 44 49 44 55 C44 57.5 44.8 59.8 46.2 61.7
+                                 L44 68 L50.5 65.8 C52.3 66.9 54.4 67.5 56.5 67.5
+                                 C62.5 67.5 67.5 62.5 67.5 56.5 C67.5 50.5 62.3 44 55 44 Z"
+                              fill="white" opacity="0.9"/>
+                    </svg>
+                </div>
+                <h3 class="pastel-card__title" id="card3-title">Deliver</h3>
+                <p class="pastel-card__caption">YOUR <em>report</em></p>
+            </article>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 4 — SPLIT SECTION
+================================================================ -->
+<section class="split-section" aria-labelledby="split-heading">
+    <div class="split-section__inner">
+        <div class="split-section__visual" aria-hidden="true">
+            <!-- Latte cup SVG -->
+            <svg class="latte-cup" viewBox="0 0 220 260"
+                 xmlns="http://www.w3.org/2000/svg"
+                 aria-label="Latte cup illustration">
+                <!-- Table surface -->
+                <rect x="10" y="230" width="200" height="20" rx="4" fill="#E8D5C4"/>
+                <!-- Saucer -->
+                <ellipse cx="110" cy="228" rx="80" ry="14" fill="#D4B8A8"/>
+                <ellipse cx="110" cy="224" rx="76" ry="12" fill="#F2D0CB"/>
+                <!-- Cup body -->
+                <path d="M55 120 Q48 210 110 220 Q172 210 165 120 Z"
+                      fill="#4A2A26"/>
+                <path d="M58 120 Q51 208 110 218 Q169 208 162 120 Z"
+                      fill="#7A5650"/>
+                <!-- Cup rim ellipse -->
+                <ellipse cx="110" cy="120" rx="52" ry="12" fill="#4A2A26"/>
+                <ellipse cx="110" cy="118" rx="52" ry="12" fill="#9A3440"/>
+                <!-- Coffee surface -->
+                <ellipse cx="110" cy="118" rx="47" ry="10" fill="#3A1A16"/>
+                <!-- Latte art — leaf -->
+                <path d="M110 110 Q102 114 100 118 Q110 121 120 118 Q118 114 110 110 Z"
+                      fill="#7A5650" opacity="0.6"/>
+                <line x1="110" y1="110" x2="110" y2="122"
+                      stroke="#A3807E" stroke-width="1" opacity="0.5"/>
+                <!-- Handle -->
+                <path d="M163 140 Q192 140 192 160 Q192 180 163 180"
+                      fill="none" stroke="#4A2A26" stroke-width="10"
+                      stroke-linecap="round"/>
+                <path d="M163 142 Q188 142 188 160 Q188 178 163 178"
+                      fill="none" stroke="#7A5650" stroke-width="6"
+                      stroke-linecap="round"/>
+                <!-- Cup decoration lines -->
+                <line x1="75" y1="150" x2="75" y2="170"
+                      stroke="#9A3440" stroke-width="1.5" opacity="0.4"
+                      stroke-linecap="round"/>
+                <line x1="82" y1="148" x2="82" y2="175"
+                      stroke="#9A3440" stroke-width="1.5" opacity="0.4"
+                      stroke-linecap="round"/>
+                <!-- Steam above cup -->
+                <g class="steam">
+                    <path class="steam__wisp steam__wisp--1"
+                          d="M95 62 Q90 50 95 38 Q100 26 95 14"
+                          fill="none" stroke="#A3807E" stroke-width="2.5"
+                          stroke-linecap="round" opacity="0.6"/>
+                    <path class="steam__wisp steam__wisp--2"
+                          d="M110 58 Q105 46 110 34 Q115 22 110 10"
+                          fill="none" stroke="#A3807E" stroke-width="2.5"
+                          stroke-linecap="round" opacity="0.6"/>
+                    <path class="steam__wisp steam__wisp--3"
+                          d="M126 62 Q121 50 126 38 Q131 26 126 14"
+                          fill="none" stroke="#A3807E" stroke-width="2.5"
+                          stroke-linecap="round" opacity="0.6"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="split-section__copy">
+            <h2 class="split-section__heading" id="split-heading">
+                Never miss a deadline again.
+            </h2>
+            <p class="split-section__body">
+                Inbox Insights scans your Gmail every morning, extracts deadlines
+                and key dates, and delivers a structured PDF report straight to
+                your WhatsApp — before your day even begins.
+            </p>
+            <p class="split-section__body">
+                Whether you manage one inbox or five, every important email
+                gets its moment in the spotlight.
+            </p>
+            <a href="{{ url_for('register') }}" class="btn btn--pill btn--outline-pink">
+                Start for free →
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ================================================================
+     SECTION 5 — CTA BAND (Mauve)
+================================================================ -->
+<section class="cta-band" aria-labelledby="cta-heading">
+    <div class="cta-band__tear-top" aria-hidden="true"></div>
+    <div class="cta-band__inner">
+        <h2 class="cta-band__heading" id="cta-heading">
+            Ready to clean up your inbox?
+        </h2>
+        <p class="cta-band__sub">Join hundreds of professionals who start their day with clarity.</p>
+        <a href="{{ url_for('register') }}" class="btn btn--pill btn--cream">
+            Create your account
+        </a>
+    </div>
+</section>
+
+{% endblock %}

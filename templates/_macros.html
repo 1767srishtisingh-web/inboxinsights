@@ -1,0 +1,40 @@
+{# templates/_macros.html — Reusable form and UI component macros #}
+
+{% macro input_field(name, label, type='text', value='', placeholder='', required=true, pattern='', autocomplete='') %}
+<div class="form-group">
+    <label for="{{ name }}" class="form-label">{{ label }}</label>
+    <input
+        type="{{ type }}"
+        id="{{ name }}"
+        name="{{ name }}"
+        value="{{ value | default('', true) | e }}"
+        placeholder="{{ placeholder | e }}"
+        class="form-input"
+        {% if required %}required aria-required="true"{% endif %}
+        {% if pattern %}pattern="{{ pattern }}"{% endif %}
+        {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+    >
+</div>
+{% endmacro %}
+
+{% macro csrf() %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% endmacro %}
+
+{% macro status_badge(status) %}
+{% set s = status | lower %}
+<span class="status-badge status-badge--{{ s }}">
+    {% if s == 'sent' %}
+        ✓ Sent
+    {% elif s == 'failed' %}
+        ✕ Failed
+    {% elif s == 'no_emails' %}
+        📭 No emails
+    {% elif s == 'pending' %}
+        ⏳ Pending
+    {% else %}
+        {{ status | capitalize }}
+    {% endif %}
+</span>
+{% endmacro %}
+

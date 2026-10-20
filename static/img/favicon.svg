@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="#F6EFE6"/>
+  <!-- Cup body -->
+  <path d="M7 13h14v8a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5v-8z" fill="#4A2A26"/>
+  <!-- Cup handle -->
+  <path d="M21 15h2a3 3 0 0 1 3 3v1a3 3 0 0 1-3 3h-2" stroke="#4A2A26" stroke-width="2" stroke-linecap="round"/>
+  <!-- Whipped cream -->
+  <path d="M8 13c1-3 3-4 6-4s5 1 6 4" fill="#FBF7F1"/>
+  <!-- Raspberry -->
+  <circle cx="14" cy="8" r="2.5" fill="#9A3440"/>
+  <!-- Saucer -->
+  <path d="M5 28h18" stroke="#A3807E" stroke-width="2" stroke-linecap="round"/>
+</svg>
+

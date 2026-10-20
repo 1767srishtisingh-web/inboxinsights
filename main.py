@@ -1,91 +1,91 @@
 #!/usr/bin/env python3
-# main.py — Inbox Insights (multi-user)
-# Run: python main.py
+"""
+main.py — Run reports from the command line.
 
+Usage:
+    python main.py                  # Run report for all eligible users
+    python main.py --user 1         # Run for specific user ID only
+    python main.py --no-send        # Generate reports & PDFs without sending WhatsApp
+    python main.py --user 1 --no-send
+"""
+
+import argparse
+import sys
 from datetime import datetime
 
-from modules.user_manager import load_users, ConfigError
-from modules.gmail_fetcher import fetch_all_accounts
-from modules.ai_summarizer import summarize_all
-from modules.pdf_generator import generate_pdf
-from modules.whatsapp_sender import send_whatsapp_pdf
+from modules.db import init_db, get_users_for_delivery, get_user_by_id
+from modules.pipeline import run_for_user
 from modules.logger import get_logger
 
 log = get_logger(__name__)
 
 
-def process_user(user: dict) -> dict:
-    """Run the full pipeline for a single user. Never lets one user's
-    failure stop the others — errors are caught and logged per user."""
-    user_id = user["user_id"]
-    name = user["name"]
-    accounts = user["gmail_accounts"]
-    whatsapp_to = user["whatsapp_to"]
+def run_cli():
+    parser = argparse.ArgumentParser(
+        description="Inbox Insights — CLI report generator & dispatcher"
+    )
+    parser.add_argument(
+        "--user",
+        type=int,
+        metavar="USER_ID",
+        help="Run pipeline only for a specific user ID",
+    )
+    parser.add_argument(
+        "--no-send",
+        action="store_true",
+        help="Generate PDF reports but skip WhatsApp delivery",
+    )
+    args = parser.parse_args()
 
-    status = {
-        "user_id": user_id, "name": name, "emails_found": 0,
-        "ai_status": "skipped", "pdf_status": "skipped",
-        "whatsapp_status": "skipped", "error": None,
-    }
+    init_db()
 
-    try:
-        log.info("=== Processing user: %s (%s) ===", name, user_id)
+    send_whatsapp = not args.no_send
+    start_time = datetime.now()
 
-        emails = fetch_all_accounts(user_id, accounts)
-        status["emails_found"] = len(emails)
-        if not emails:
-            log.info("[%s] No emails found today. Nothing to summarize or send.", user_id)
-            return status
+    print("\n" + "=" * 65)
+    print("  Inbox Insights — Manual Report Runner")
+    print(f"  Mode: {'Live WhatsApp send' if send_whatsapp else 'Dry-run (--no-send)'}")
+    print(f"  Started: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 65)
 
-        emails = summarize_all(emails)
-        status["ai_status"] = "ok"
+    targets = []
+    if args.user:
+        user = get_user_by_id(args.user)
+        if not user:
+            print(f"\n[ERROR] User with ID {args.user} not found in database.")
+            sys.exit(1)
+        targets = [user]
+    else:
+        targets = get_users_for_delivery()
+        if not targets:
+            print("\nNo enabled users with connected Gmail accounts found.")
+            sys.exit(0)
 
-        pdf_path = generate_pdf(name, accounts, emails)
-        status["pdf_status"] = "ok"
-        status["pdf_path"] = pdf_path
+    print(f"\nProcessing {len(targets)} user(s)...\n")
 
-        sent = send_whatsapp_pdf(pdf_path, whatsapp_to)
-        status["whatsapp_status"] = "sent" if sent else "failed_or_skipped"
+    summary = []
+    for user in targets:
+        uid = user["id"]
+        uname = user.get("name", f"User #{uid}")
+        uphone = user.get("whatsapp", "")
+        print(f"► Running for {uname} (ID: {uid}, {uphone})...")
 
-    except Exception as e:
-        log.exception("[%s] Unhandled error while processing user: %s", user_id, e)
-        status["error"] = str(e)
+        res = run_for_user(uid, send_whatsapp=send_whatsapp)
+        summary.append(res)
 
-    return status
+        print(f"   • Emails found today:  {res.get('email_count', 0)}")
+        print(f"   • Deadlines detected:  {res.get('deadline_count', 0)}")
+        print(f"   • PDF generated:       {res.get('pdf_path') or 'None'}")
+        print(f"   • WhatsApp delivery:   {res.get('whatsapp_status', 'skipped')}")
+        if res.get("error"):
+            print(f"   • Error:               {res['error']}")
+        print()
 
-
-def run():
-    start = datetime.now()
-    log.info("Run started at %s", start.strftime("%Y-%m-%d %H:%M:%S"))
-
-    try:
-        users = load_users(enabled_only=True)
-    except ConfigError as e:
-        log.error("Cannot start: %s", e)
-        return
-
-    all_status = [process_user(user) for user in users]
-
-    end = datetime.now()
-    log.info("Run finished at %s (duration: %s)", end.strftime("%Y-%m-%d %H:%M:%S"), end - start)
-    _print_summary(all_status)
-    return all_status
-
-
-def _print_summary(all_status):
-    print("\n" + "=" * 60)
-    print("  Inbox Insights — Run Summary")
-    print("=" * 60)
-    for s in all_status:
-        print(f"\n  User: {s['name']} ({s['user_id']})")
-        print(f"    Emails found:  {s['emails_found']}")
-        print(f"    AI summary:    {s['ai_status']}")
-        print(f"    PDF report:    {s['pdf_status']}")
-        print(f"    WhatsApp:      {s['whatsapp_status']}")
-        if s.get("error"):
-            print(f"    Error:         {s['error']}")
-    print("\n" + "=" * 60)
+    duration = datetime.now() - start_time
+    print("=" * 65)
+    print(f"  Completed in {duration.total_seconds():.1f}s")
+    print("=" * 65 + "\n")
 
 
 if __name__ == "__main__":
-    run()
+    run_cli()

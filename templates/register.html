@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Create your account — Inbox Insights{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+
+{% block content %}
+<main class="auth-main" id="main-content">
+    <div class="auth-card">
+
+        <!-- Header -->
+        <div class="auth-card__header">
+            <a href="{{ url_for('index') }}" class="auth-logo" aria-label="Back to Inbox Insights home">
+                <span class="auth-logo__serif">Inbox</span> <em>Insights</em>
+            </a>
+            <h1 class="auth-card__heading">Create your account</h1>
+            <p class="auth-card__sub">Start your daily digest in minutes.</p>
+        </div>
+
+        <!-- Twilio sandbox instruction -->
+        <div class="sandbox-notice" role="note" aria-label="WhatsApp activation required">
+            <span class="sandbox-notice__icon" aria-hidden="true">📱</span>
+            <div class="sandbox-notice__body">
+                <strong>Before you can receive reports, you must activate WhatsApp:</strong>
+                <p>Send <code class="sandbox-code">join &lt;sandbox-word&gt;</code> to
+                    <strong>+1 (415) 523-8886</strong> on WhatsApp.</p>
+                <p class="sandbox-notice__footnote">You only need to do this once.</p>
+            </div>
+        </div>
+
+        <!-- Registration form -->
+        <form class="auth-form" method="post" action="{{ url_for('register') }}"
+              novalidate aria-labelledby="register-form-label">
+            <h2 id="register-form-label" class="sr-only">Registration form</h2>
+
+            <!-- CSRF token -->
+            {% if form is defined %}
+                {{ form.hidden_tag() }}
+            {% else %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+
+            <!-- Full Name -->
+            <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input
+                    class="form-input {% if form is defined and form.full_name.errors %}form-input--error{% endif %}"
+                    type="text"
+                    id="full_name"
+                    name="full_name"
+                    value="{{ form.full_name.data | e if form is defined and form.full_name.data else '' }}"
+                    required
+                    autocomplete="name"
+                    placeholder="Your full name"
+                    aria-required="true"
+                    aria-describedby="full_name_error"
+                >
+                {% if form is defined and form.full_name.errors %}
+                    <span class="form-error" id="full_name_error" role="alert">
+                        {{ form.full_name.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- WhatsApp Number -->
+            <div class="form-group">
+                <label class="form-label" for="whatsapp_number">WhatsApp Number</label>
+                <input
+                    class="form-input {% if form is defined and form.whatsapp_number.errors %}form-input--error{% endif %}"
+                    type="tel"
+                    id="whatsapp_number"
+                    name="whatsapp_number"
+                    value="{{ form.whatsapp_number.data | e if form is defined and form.whatsapp_number.data else '' }}"
+                    required
+                    autocomplete="tel"
+                    placeholder="+91 98765 43210"
+                    pattern="\+[0-9]{8,15}"
+                    aria-required="true"
+                    aria-describedby="whatsapp_hint whatsapp_error"
+                >
+                <span class="form-hint" id="whatsapp_hint">
+                    Include country code, e.g. +91 for India.
+                </span>
+                {% if form is defined and form.whatsapp_number.errors %}
+                    <span class="form-error" id="whatsapp_error" role="alert">
+                        {{ form.whatsapp_number.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input
+                    class="form-input {% if form is defined and form.password.errors %}form-input--error{% endif %}"
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    minlength="8"
+                    autocomplete="new-password"
+                    placeholder="At least 8 characters"
+                    aria-required="true"
+                    aria-describedby="password_hint password_error"
+                >
+                <span class="form-hint" id="password_hint">Minimum 8 characters.</span>
+                {% if form is defined and form.password.errors %}
+                    <span class="form-error" id="password_error" role="alert">
+                        {{ form.password.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm Password</label>
+                <input
+                    class="form-input {% if form is defined and form.confirm_password.errors %}form-input--error{% endif %}"
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    required
+                    minlength="8"
+                    autocomplete="new-password"
+                    placeholder="Repeat your password"
+                    aria-required="true"
+                    aria-describedby="confirm_error"
+                >
+                {% if form is defined and form.confirm_password.errors %}
+                    <span class="form-error" id="confirm_error" role="alert">
+                        {{ form.confirm_password.errors[0] | e }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Delivery Time & Timezone row -->
+            <div class="form-row">
+                <div class="form-group form-group--half">
+                    <label class="form-label" for="delivery_time">Delivery Time</label>
+                    <input
+                        class="form-input"
+                        type="time"
+                        id="delivery_time"
+                        name="delivery_time"
+                        value="{{ form.delivery_time.data if form is defined and form.delivery_time.data else '08:00' }}"
+                        aria-describedby="delivery_hint"
+                    >
+                    <span class="form-hint" id="delivery_hint">
+                        Time in your local timezone.
+                    </span>
+                </div>
+
+                <div class="form-group form-group--half">
+                    <label class="form-label" for="timezone">Timezone</label>
+                    <select
+                        class="form-select"
+                        id="timezone"
+                        name="timezone"
+                        aria-label="Select your timezone"
+                    >
+                        {% set tz_options = [
+                            ('Asia/Kolkata',        'Asia/Kolkata (IST, UTC+5:30)'),
+                            ('America/New_York',    'America/New_York (EST/EDT)'),
+                            ('America/Los_Angeles', 'America/Los_Angeles (PST/PDT)'),
+                            ('Europe/London',       'Europe/London (GMT/BST)'),
+                            ('Europe/Paris',        'Europe/Paris (CET/CEST)'),
+                            ('Australia/Sydney',    'Australia/Sydney (AEST/AEDT)'),
+                            ('Asia/Dubai',          'Asia/Dubai (GST, UTC+4)'),
+                            ('Asia/Singapore',      'Asia/Singapore (SGT, UTC+8)'),
+                            ('Asia/Tokyo',          'Asia/Tokyo (JST, UTC+9)'),
+                            ('UTC',                 'UTC'),
+                        ] %}
+                        {% for tz_value, tz_label in tz_options %}
+                            <option value="{{ tz_value | e }}"
+                                {% if form is defined and form.timezone.data == tz_value %}selected{% endif %}
+                                {% if not (form is defined and form.timezone.data) and tz_value == 'Asia/Kolkata' %}selected{% endif %}
+                            >{{ tz_label | e }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button class="btn btn--pill btn--espresso btn--full" type="submit"
+                    aria-label="Create your Inbox Insights account">
+                Create account
+            </button>
+
+            <p class="auth-form__switch">
+                Already have an account?
+                <a href="{{ url_for('login') }}" class="link--raspberry">Sign in</a>
+            </p>
+        </form>
+
+    </div>
+</main>
+{% endblock %}
