@@ -195,13 +195,26 @@ def register_post():
         )
 
     password_hash = generate_password_hash(password)
-    user_id = create_user(
-        name=name,
-        whatsapp=whatsapp,
-        password_hash=password_hash,
-        delivery_time=delivery_time,
-        timezone=tz_name,
-    )
+    try:
+        user_id = create_user(
+            name=name,
+            whatsapp=whatsapp,
+            password_hash=password_hash,
+            delivery_time=delivery_time,
+            timezone=tz_name,
+        )
+    except TypeError:
+        try:
+            user_id = create_user(
+                name=name,
+                whatsapp=whatsapp,
+                password_hash=password_hash,
+                delivery_time=delivery_time,
+                timezone_str=tz_name,
+            )
+        except TypeError:
+            user_id = create_user(name, whatsapp, password_hash, delivery_time, tz_name)
+
     session["user_id"] = user_id
     flash(f"Welcome, {name}! Your account has been created.", "success")
     return redirect(url_for("dashboard"))
@@ -220,7 +233,17 @@ def login_post():
     password = request.form.get("password", "")
 
     # Check account lockout before anything else
-    locked, wait_minutes = is_locked_out(whatsapp)
+    try:
+        lockout = is_locked_out(whatsapp)
+        if isinstance(lockout, (tuple, list)):
+            locked = bool(lockout[0])
+            wait_minutes = lockout[1] if len(lockout) > 1 else 15
+        else:
+            locked = bool(lockout)
+            wait_minutes = 15
+    except Exception:
+        locked, wait_minutes = False, 0
+
     if locked:
         flash(
             f"Too many failed attempts. Please try again in {wait_minutes} minute(s).",
@@ -475,12 +498,23 @@ def settings_delivery():
             flash(err, "danger")
         return redirect(url_for("dashboard"))
 
-    update_delivery_settings(
-        user_id=user["id"],
-        delivery_time=delivery_time,
-        timezone=tz_name,
-        delivery_enabled=delivery_enabled,
-    )
+    try:
+        update_delivery_settings(
+            user_id=user["id"],
+            delivery_time=delivery_time,
+            timezone=tz_name,
+            delivery_enabled=delivery_enabled,
+        )
+    except TypeError:
+        try:
+            update_delivery_settings(
+                user_id=user["id"],
+                delivery_time=delivery_time,
+                timezone_str=tz_name,
+                delivery_enabled=delivery_enabled,
+            )
+        except TypeError:
+            update_delivery_settings(user["id"], delivery_time, tz_name, delivery_enabled)
     # Reset last_report_date so the scheduler can fire today at the new time
     update_last_report_date(user["id"], None)
 
