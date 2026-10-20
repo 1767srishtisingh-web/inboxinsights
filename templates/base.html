@@ -3,68 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Inbox Insights{% endblock %}</title>
+    <title>{% block title %}Inbox Insights — Daily Email Report on WhatsApp{% endblock %}</title>
+    <meta name="description" content="Clean, table-only daily email digest delivered to WhatsApp every morning. Connect multiple Gmail accounts with read-only security.">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
-<!-- Flash messages -->
-<div class="flash-container" role="alert" aria-live="polite">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash flash--{{ category | e }}">
-                    <span>{{ message | e }}</span>
-                    <button class="flash__close" aria-label="Dismiss notification" onclick="this.parentElement.remove()">×</button>
+    <!-- Flash notifications -->
+    <div class="flash-wrapper" role="region" aria-label="Notifications" aria-live="polite">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container">
+                    {% for category, message in messages %}
+                        <div class="flash-alert flash-alert--{{ category | e }}" role="alert">
+                            <div class="flash-alert__content">
+                                {% if category in ['error', 'danger'] %}
+                                    <svg class="flash-alert__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="10"/><line x1="10" y1="14" x2="10.01" y2="14"/></svg>
+                                {% elif category == 'success' %}
+                                    <svg class="flash-alert__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M6 10l3 3 5-5"/></svg>
+                                {% else %}
+                                    <svg class="flash-alert__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="10" y1="6" x2="10.01" y2="6"/></svg>
+                                {% endif %}
+                                <span class="flash-alert__message">{{ message | e }}</span>
+                            </div>
+                            <button class="flash-alert__close" type="button" aria-label="Dismiss alert" onclick="this.closest('.flash-alert').remove()">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+                            </button>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-</div>
-
-{% block nav %}
-<!-- Default nav for inner pages -->
-<nav class="site-nav" role="navigation" aria-label="Main navigation">
-    <div class="nav-inner">
-        <a href="{{ url_for('index') }}" class="nav-logo" aria-label="Inbox Insights home">
-            <span class="nav-logo__serif">Inbox</span> <em>Insights</em>
-        </a>
-        <div class="nav-links">
-            {% if current_user and current_user.is_authenticated %}
-                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
-                <a href="{{ url_for('logout') }}" class="btn btn--outline btn--sm">Sign out</a>
-            {% else %}
-                <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">Log in</a>
-                <a href="{{ url_for('register') }}" class="btn btn--pill">Get started</a>
             {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block header %}
+    <header class="site-header" role="banner">
+        <div class="container site-header__inner">
+            <!-- Brand Wordmark -->
+            <a href="{{ url_for('index') }}" class="site-brand" aria-label="Inbox Insights home">
+                <span class="site-brand__text">Inbox Insights</span>
+            </a>
+
+            <!-- Desktop Navigation Links -->
+            <nav class="desktop-nav" role="navigation" aria-label="Primary navigation">
+                {% if current_user %}
+                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}nav-link--active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('connect_gmail') }}" class="nav-link">Connect Gmail</a>
+                {% else %}
+                    <a href="{{ url_for('index') }}#how-it-works" class="nav-link">How it works</a>
+                    <a href="{{ url_for('index') }}#report-format" class="nav-link">Report format</a>
+                    <a href="{{ url_for('index') }}#privacy" class="nav-link">Privacy</a>
+                {% endif %}
+            </nav>
+
+            <!-- Desktop Auth Controls -->
+            <div class="desktop-auth">
+                {% if current_user %}
+                    <div class="user-pill" title="{{ current_user.whatsapp }}">
+                        <span class="user-avatar" aria-hidden="true">{{ current_user.name[:1] | upper }}</span>
+                        <span class="user-name">{{ current_user.name.split()[0] }}</span>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="btn btn--outline btn--sm">Log out</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn--outline btn--sm">Log in</a>
+                    <a href="{{ url_for('register') }}" class="btn btn--primary btn--sm">Get started</a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Navigation (Zero-JS <details>/<summary>) -->
+            <details class="mobile-nav">
+                <summary class="mobile-nav__toggle" aria-label="Toggle navigation menu">
+                    <svg class="mobile-nav__icon mobile-nav__icon--open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    <svg class="mobile-nav__icon mobile-nav__icon--close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </summary>
+                <div class="mobile-nav__dropdown">
+                    {% if current_user %}
+                        <div class="mobile-nav__user">
+                            <span class="user-avatar">{{ current_user.name[:1] | upper }}</span>
+                            <div class="mobile-nav__user-details">
+                                <span class="mobile-nav__user-name">{{ current_user.name }}</span>
+                                <span class="mobile-nav__user-phone">{{ current_user.whatsapp }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('dashboard') }}" class="mobile-nav__link {% if request.endpoint == 'dashboard' %}mobile-nav__link--active{% endif %}">Dashboard</a>
+                        <a href="{{ url_for('connect_gmail') }}" class="mobile-nav__link">Connect Gmail</a>
+                        <div class="mobile-nav__divider"></div>
+                        <a href="{{ url_for('logout') }}" class="btn btn--outline btn--block">Log out</a>
+                    {% else %}
+                        <a href="{{ url_for('index') }}#how-it-works" class="mobile-nav__link">How it works</a>
+                        <a href="{{ url_for('index') }}#report-format" class="mobile-nav__link">Report format</a>
+                        <a href="{{ url_for('index') }}#privacy" class="mobile-nav__link">Privacy</a>
+                        <div class="mobile-nav__divider"></div>
+                        <a href="{{ url_for('login') }}" class="btn btn--outline btn--block">Log in</a>
+                        <a href="{{ url_for('register') }}" class="btn btn--primary btn--block">Get started</a>
+                    {% endif %}
+                </div>
+            </details>
         </div>
-    </div>
-</nav>
-{% endblock %}
+    </header>
+    {% endblock %}
 
-{% block content %}{% endblock %}
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
 
-{% block footer %}
-<footer class="site-footer" role="contentinfo">
-    <div class="footer-tear" aria-hidden="true"></div>
-    <div class="footer-inner">
-        <p class="footer-logo"><span>Inbox</span> <em>Insights</em></p>
-        <p class="footer-tagline">Your daily email digest, beautifully delivered.</p>
-        <p class="footer-copy">© 2026 Inbox Insights. Built with ☕ and Python.</p>
-    </div>
-</footer>
-{% endblock %}
+    {% block footer %}
+    <footer class="site-footer" role="contentinfo">
+        <div class="container site-footer__inner">
+            <div class="site-footer__brand-col">
+                <a href="{{ url_for('index') }}" class="site-brand site-brand--light">
+                    <span>Inbox Insights</span>
+                </a>
+                <p class="site-footer__tagline">Daily email digests delivered to WhatsApp. One organized table. Every evening.</p>
+                <p class="site-footer__legal">© 2026 Inbox Insights. Built with Flask, SQLite & Claude AI.</p>
+            </div>
+            <div class="site-footer__links-col">
+                <span class="site-footer__heading">Navigation</span>
+                <ul class="site-footer__list">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('index') }}#how-it-works">How it works</a></li>
+                    <li><a href="{{ url_for('index') }}#report-format">Report format</a></li>
+                    <li><a href="{{ url_for('index') }}#privacy">Privacy & Security</a></li>
+                </ul>
+            </div>
+            <div class="site-footer__links-col">
+                <span class="site-footer__heading">Account</span>
+                <ul class="site-footer__list">
+                    {% if current_user %}
+                        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('connect_gmail') }}">Connect Gmail</a></li>
+                        <li><a href="{{ url_for('logout') }}">Sign out</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}">Log in</a></li>
+                        <li><a href="{{ url_for('register') }}">Create account</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="site-footer__links-col">
+                <span class="site-footer__heading">Security</span>
+                <p class="site-footer__privacy-note">
+                    Strict read-only OAuth scopes. Tokens encrypted at rest with Fernet cryptography. Never uploaded to third-party public hosts.
+                </p>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
 
-<script>
-    // Auto-dismiss flash messages after 5 seconds
-    document.querySelectorAll('.flash').forEach(function(el) {
-        setTimeout(function() {
-            if (el && el.parentElement) el.remove();
-        }, 5000);
-    });
-</script>
-{% block scripts %}{% endblock %}
+    <script>
+        // Dismiss flash alerts smoothly
+        document.querySelectorAll('.flash-alert').forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-6px)';
+                setTimeout(function() { alert.remove(); }, 300);
+            }, 6000);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

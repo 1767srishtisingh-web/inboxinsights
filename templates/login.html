@@ -4,86 +4,95 @@
 {% block body_class %}page-auth{% endblock %}
 
 {% block content %}
-<main class="auth-main" id="main-content">
-    <div class="auth-card">
-
-        <!-- Header -->
-        <div class="auth-card__header">
-            <a href="{{ url_for('index') }}" class="auth-logo" aria-label="Back to Inbox Insights home">
-                <span class="auth-logo__serif">Inbox</span> <em>Insights</em>
+<div class="auth-layout">
+    <!-- Left: Mauve Brand Panel -->
+    <aside class="auth-panel">
+        <div class="auth-panel__inner">
+            <a href="{{ url_for('index') }}" class="site-brand site-brand--light">
+                <span>Inbox Insights</span>
             </a>
-            <h1 class="auth-card__heading">Welcome back</h1>
-            <p class="auth-card__sub">Sign in to your Inbox Insights account.</p>
+            <div class="auth-panel__content">
+                <span class="eyebrow eyebrow--light">Welcome back</span>
+                <h1 class="auth-panel__title">
+                    Check your inboxes. <em>Stay focused.</em>
+                </h1>
+                <p class="auth-panel__sub">
+                    Sign in to manage your connected Gmail accounts, adjust delivery times, and view recent reports.
+                </p>
+
+                <ul class="auth-panel__checklist">
+                    <li class="auth-panel__check-item">
+                        <svg class="icon-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10.5l4 4 8-9"/></svg>
+                        <span>Multi-user isolation with brute-force login throttling</span>
+                    </li>
+                    <li class="auth-panel__check-item">
+                        <svg class="icon-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10.5l4 4 8-9"/></svg>
+                        <span>Connect personal, college, or work inboxes independently</span>
+                    </li>
+                    <li class="auth-panel__check-item">
+                        <svg class="icon-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 10.5l4 4 8-9"/></svg>
+                        <span>Instant "Send today's report now" on-demand dispatch</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="auth-panel__footer">
+                <span>New to Inbox Insights? <a href="{{ url_for('register') }}">Create an account</a>.</span>
+            </div>
         </div>
+    </aside>
 
-        <!-- Login form -->
-        <form class="auth-form" method="post" action="{{ url_for('login') }}"
-              novalidate aria-labelledby="login-form-label">
-            <h2 id="login-form-label" class="sr-only">Sign in form</h2>
+    <!-- Right: Form Card Area -->
+    <div class="auth-card-wrap">
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <h2 class="auth-card__title">Sign in to your account</h2>
+                <p class="auth-card__lead">Use your registered WhatsApp number and password.</p>
+            </div>
 
-            <!-- CSRF token -->
-            {% if form is defined %}
-                {{ form.hidden_tag() }}
-            {% else %}
+            <form class="saas-form" method="post" action="{{ url_for('login') }}" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% endif %}
 
-            <!-- WhatsApp Number -->
-            <div class="form-group">
-                <label class="form-label" for="whatsapp_number">WhatsApp Number</label>
-                <input
-                    class="form-input {% if form is defined and form.whatsapp_number.errors %}form-input--error{% endif %}"
-                    type="tel"
-                    id="whatsapp_number"
-                    name="whatsapp_number"
-                    value="{{ form.whatsapp_number.data | e if form is defined and form.whatsapp_number.data else '' }}"
-                    required
-                    autocomplete="tel"
-                    placeholder="+91 98765 43210"
-                    pattern="\+[0-9]{8,15}"
-                    aria-required="true"
-                    aria-describedby="wa_login_error"
-                >
-                {% if form is defined and form.whatsapp_number.errors %}
-                    <span class="form-error" id="wa_login_error" role="alert">
-                        {{ form.whatsapp_number.errors[0] | e }}
-                    </span>
-                {% endif %}
+                <!-- WhatsApp Number -->
+                <div class="form-group">
+                    <label class="form-label" for="whatsapp">WhatsApp phone number</label>
+                    <input
+                        type="tel"
+                        id="whatsapp"
+                        name="whatsapp"
+                        class="form-input"
+                        placeholder="+919876543210"
+                        required
+                        autocomplete="tel"
+                        pattern="^\+[1-9]\d{7,14}$"
+                    >
+                    <span class="form-hint">E.164 format with country code (e.g. +919876543210).</span>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Your account password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <div class="form-actions" style="margin-top: 24px;">
+                    <button type="submit" class="btn btn--primary btn--block btn--lg">
+                        Sign in to dashboard →
+                    </button>
+                </div>
+            </form>
+
+            <div class="auth-card__footer">
+                <span>Don't have an account yet? <a href="{{ url_for('register') }}" class="link-styled">Get started</a></span>
             </div>
-
-            <!-- Password -->
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input
-                    class="form-input {% if form is defined and form.password.errors %}form-input--error{% endif %}"
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    autocomplete="current-password"
-                    placeholder="Your password"
-                    aria-required="true"
-                    aria-describedby="pwd_login_error"
-                >
-                {% if form is defined and form.password.errors %}
-                    <span class="form-error" id="pwd_login_error" role="alert">
-                        {{ form.password.errors[0] | e }}
-                    </span>
-                {% endif %}
-            </div>
-
-            <!-- Submit -->
-            <button class="btn btn--pill btn--espresso btn--full" type="submit"
-                    aria-label="Sign in to your Inbox Insights account">
-                Sign in
-            </button>
-
-            <p class="auth-form__switch">
-                Don't have an account?
-                <a href="{{ url_for('register') }}" class="link--raspberry">Create one free</a>
-            </p>
-        </form>
-
+        </div>
     </div>
-</main>
+</div>
 {% endblock %}

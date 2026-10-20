@@ -24,6 +24,7 @@ Before starting, make sure you have:
 3. Create and activate a Python virtual environment:
    ```powershell
    py -3.12 -m venv venv
+
    .\venv\Scripts\Activate.ps1
    ```
    *(If PowerShell gives an execution policy error, run `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, then try activating again).*
