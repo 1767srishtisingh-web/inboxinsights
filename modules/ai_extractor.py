@@ -107,8 +107,17 @@ def _call_claude(batch: list[dict], today_date: str, attempt: int = 0) -> Option
     """
     try:
         import anthropic  # lazy import — only needed if API key is set
+        import os
 
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        headers = {}
+        workspace_id = os.getenv("ANTHROPIC_WORKSPACE_ID", "")
+        if workspace_id:
+            headers["anthropic-workspace-id"] = workspace_id
+
+        client = anthropic.Anthropic(
+            api_key=ANTHROPIC_API_KEY,
+            default_headers=headers if headers else None,
+        )
 
         user_message = _USER_TEMPLATE.format(
             today_date=today_date,

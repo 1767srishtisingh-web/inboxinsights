@@ -32,6 +32,7 @@ GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 # Claude AI
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_WORKSPACE_ID = os.getenv("ANTHROPIC_WORKSPACE_ID", "")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5")
 AI_MAX_RETRIES = int(os.getenv("AI_MAX_RETRIES", 3))
 AI_BATCH_SIZE = int(os.getenv("AI_BATCH_SIZE", 20))

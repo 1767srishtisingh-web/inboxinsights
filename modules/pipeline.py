@@ -74,6 +74,16 @@ def run_for_user(user_id: int, send_whatsapp: bool = True) -> dict:
         log.exception(result["error"])
         return result
 
+    if not accounts:
+        log.info("No Gmail accounts configured for user %d (%s)", user_id, user.get("name"))
+        if send_whatsapp:
+            try:
+                whatsapp_sender.send_no_accounts_message(user["whatsapp"], BASE_URL)
+            except Exception as exc:
+                log.warning("Failed to send no-accounts message: %s", exc)
+        result["error"] = "No Gmail accounts connected yet. Please connect an inbox from your dashboard."
+        return result
+
     # Warn about accounts needing reconnection
     bad_accounts = [a for a in accounts if a.get("status") != "ok"]
     if bad_accounts and send_whatsapp:
@@ -84,6 +94,10 @@ def run_for_user(user_id: int, send_whatsapp: bool = True) -> dict:
             )
         except Exception as exc:
             log.warning("Failed to send reconnect warning: %s", exc)
+
+    if not ok_accounts:
+        result["error"] = "All connected Gmail accounts need reconnection."
+        return result
 
     # ── Step 3: Fetch emails ───────────────────────────────────────────
     all_emails: list[dict] = []

@@ -108,14 +108,16 @@ def create_user(
     whatsapp: str,
     password_hash: str,
     delivery_time: str = "08:00",
-    timezone_str: str = "Asia/Kolkata",
+    timezone: str = "Asia/Kolkata",
+    timezone_str: Optional[str] = None,
 ) -> int:
     """Insert a new user and return the new user id."""
+    tz = timezone_str if timezone_str is not None else timezone
     conn = get_connection()
     cur = conn.execute(
         """INSERT INTO users (name, whatsapp, password_hash, delivery_time, timezone)
            VALUES (?, ?, ?, ?, ?)""",
-        (name, whatsapp, password_hash, delivery_time, timezone_str),
+        (name, whatsapp, password_hash, delivery_time, tz),
     )
     conn.commit()
     return cur.lastrowid
@@ -142,16 +144,18 @@ def get_user_by_id(user_id: int) -> Optional[dict]:
 def update_delivery_settings(
     user_id: int,
     delivery_time: str,
-    timezone_str: str,
-    delivery_enabled: bool,
+    timezone: str = "Asia/Kolkata",
+    delivery_enabled: bool = True,
+    timezone_str: Optional[str] = None,
 ) -> None:
     """Update delivery preferences for a user."""
+    tz = timezone_str if timezone_str is not None else timezone
     conn = get_connection()
     conn.execute(
         """UPDATE users
            SET delivery_time = ?, timezone = ?, delivery_enabled = ?
            WHERE id = ?""",
-        (delivery_time, timezone_str, int(delivery_enabled), user_id),
+        (delivery_time, tz, int(delivery_enabled), user_id),
     )
     conn.commit()
 
@@ -214,21 +218,28 @@ def record_login_attempt(whatsapp: str, success: bool) -> None:
     conn.commit()
 
 
-def is_locked_out(whatsapp: str) -> bool:
-    """Return True if the user is currently locked out."""
+class LockoutStatus(tuple):
+    """Tuple (locked: bool, wait_minutes: int) that also evaluates as a boolean."""
+    def __bool__(self) -> bool:
+        return bool(self[0])
+
+
+def is_locked_out(whatsapp: str) -> LockoutStatus:
+    """Return (is_locked, remaining_minutes). Evaluates as both a tuple and a bool."""
     user = get_user_by_whatsapp(whatsapp)
     if user is None:
-        return False
+        return LockoutStatus((False, 0))
     lockout_until = user.get("lockout_until")
     if not lockout_until:
-        return False
+        return LockoutStatus((False, 0))
     try:
         lockout_dt = datetime.fromisoformat(lockout_until)
         if lockout_dt.tzinfo is None:
             lockout_dt = lockout_dt.replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
         if now < lockout_dt:
-            return True
+            remaining_mins = max(1, int((lockout_dt - now).total_seconds() / 60))
+            return LockoutStatus((True, remaining_mins))
         # Lockout expired — reset
         conn = get_connection()
         conn.execute(
@@ -236,9 +247,9 @@ def is_locked_out(whatsapp: str) -> bool:
             (whatsapp,),
         )
         conn.commit()
-        return False
+        return LockoutStatus((False, 0))
     except Exception:
-        return False
+        return LockoutStatus((False, 0))
 
 
 # ---------------------------------------------------------------------------

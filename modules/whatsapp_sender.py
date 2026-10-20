@@ -192,3 +192,23 @@ def send_reconnect_warning(whatsapp_to: str, account_labels: list[str]) -> bool:
         "Please log in to Inbox Insights and re-authorise these accounts."
     )
     return _send_with_retry(whatsapp_to, body)
+
+
+def send_no_accounts_message(whatsapp_to: str, base_url: str) -> bool:
+    """
+    Notify user that no Gmail accounts have been connected yet.
+
+    Args:
+        whatsapp_to: E.164 phone number.
+        base_url:    Base dashboard URL.
+
+    Returns:
+        True if sent successfully.
+    """
+    body = (
+        "⚠️ *Inbox Insights*\n\n"
+        "You haven't connected any Gmail accounts yet!\n\n"
+        f"Please log in to your dashboard at {base_url} and click '+ Connect Gmail' "
+        "to link your email and start receiving daily digests."
+    )
+    return _send_with_retry(whatsapp_to, body)
